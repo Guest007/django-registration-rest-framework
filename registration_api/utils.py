@@ -4,19 +4,20 @@ import re
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.sites.models import Site
+from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
-
-from .models import RegistrationProfile
-
 from django.db import transaction
+
+from registration_api.models import RegistrationProfile
+
+
+
 # django 1.6, 1.5 and 1.4 supports
 try:
     atomic_decorator = transaction.atomic
 except AttributeError:
     atomic_decorator = transaction.commit_on_success
-
 
 SHA1_RE = re.compile('^[a-f0-9]{40}$')
 DEFAULT_SETTINGS = {
@@ -33,7 +34,7 @@ def get_settings(key):
 
 USER_CREATED_RESPONSE_DATA = {
     'activation_days': get_settings('REGISTRATION_API_ACCOUNT_ACTIVATION_DAYS')
-    }
+}
 
 
 def get_valid_user_fields():
@@ -55,16 +56,13 @@ def get_user_data(data):
 
 
 @atomic_decorator
-def create_inactive_user(username=None, email=None, password=None):
+def create_inactive_user(request, **kwargs):
     user_model = get_user_model()
-    if username is not None:
-        new_user = user_model.objects.create_user(username, email, password)
-    else:
-        new_user = user_model.objects.create_user(email=email, password=password)
+    new_user = user_model.objects.create_user(**kwargs)
     new_user.is_active = False
     new_user.save()
     create_profile(new_user)
-    site = Site.objects.get_current()
+    site = get_current_site(request)
     send_activation_email(new_user, site)
     return new_user
 
@@ -157,7 +155,8 @@ def send_activation_email(user, site):
 
     """
     ctx_dict = {'activation_key': user.api_registration_profile.activation_key,
-                'expiration_days': get_settings('REGISTRATION_API_ACCOUNT_ACTIVATION_DAYS'),
+                'expiration_days': get_settings(
+                    'REGISTRATION_API_ACCOUNT_ACTIVATION_DAYS'),
                 'site': site}
     subject = render_to_string('registration_api/activation_email_subject.txt',
                                ctx_dict)

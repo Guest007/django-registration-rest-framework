@@ -1,5 +1,4 @@
 from urllib import urlencode
-import mock
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,10 +10,10 @@ from django.http import HttpRequest
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils.datastructures import MergeDict
-
 from rest_framework import status
 from rest_framework.response import Response
 
+import mock
 from registration_api import utils
 from registration_api.models import RegistrationProfile
 from registration_api.serializers import UserSerializer
@@ -34,6 +33,7 @@ class WsgiHttpRequest(HttpRequest):
         if not hasattr(self, '_request'):
             self._request = MergeDict(self.POST, self.GET)
         return self._request
+
     REQUEST = property(_get_request)
 
     def _get_raw_post_data(self):
@@ -44,6 +44,7 @@ class WsgiHttpRequest(HttpRequest):
     def _set_raw_post_data(self, data):
         self._raw_post_data = data
         self.POST = {}
+
     raw_post_data = property(_get_raw_post_data, _set_raw_post_data)
 
 
@@ -85,7 +86,6 @@ INVALID_DATA.pop('password')
 
 
 class UtilsTests(TestCase):
-
     def test_VALID_USER_FIELDS(self):
 
         self.assertListEqual(sorted(utils.VALID_USER_FIELDS),
@@ -178,18 +178,17 @@ class UtilsTests(TestCase):
 
 
 class UserSerializerTests(TestCase):
-
     def test_model(self):
         self.assertEqual(UserSerializer.Meta.model, get_user_model())
 
 
 class RegisterAPIViewTests(TestCase):
-
     @mock.patch('registration_api.utils.get_user_data')
     @mock.patch('registration_api.utils.create_inactive_user')
     @mock.patch('registration_api.views.UserSerializer')
     @mock.patch('registration_api.views.Response')
-    def test_valid_registration(self, mock_Response, mock_UserSerializer, mock_create_incative_user, mock_get_user_data):
+    def test_valid_registration(self, mock_Response, mock_UserSerializer,
+                                mock_create_incative_user, mock_get_user_data):
         created_user = 'user'
         mock_Response.return_value = Response()
         mock_userserializer_instance = mock.Mock()
@@ -252,7 +251,6 @@ class RegisterAPIViewTests(TestCase):
 
 
 class ActivateViewTests(TestCase):
-
     def test_activate(self):
         user = utils.create_inactive_user(**VALID_DATA)
         request = MockHttpRequest()
