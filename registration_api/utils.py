@@ -7,8 +7,9 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
 from django.db import transaction
-
+from django.core.urlresolvers import reverse_lazy
 from registration_api.models import RegistrationProfile
+
 
 
 
@@ -61,7 +62,7 @@ def create_inactive_user(request, **kwargs):
     new_user.is_active = False
     new_user.save()
     create_profile(new_user)
-    site = request.scheme+"://"+request.get_host()
+    site = request.scheme + "://" + request.get_host()
     send_activation_email(new_user, site)
     return new_user
 
@@ -156,7 +157,10 @@ def send_activation_email(user, site):
     ctx_dict = {'activation_key': user.api_registration_profile.activation_key,
                 'expiration_days': get_settings(
                     'REGISTRATION_API_ACCOUNT_ACTIVATION_DAYS'),
-                'site': site}
+                'site': site,
+
+                'path': reverse_lazy("registration_activate",
+                                     kwargs={"activation_key": user.api_registration_profile.activation_key})}
     subject = render_to_string('registration_api/activation_email_subject.txt',
                                ctx_dict)
     # Email subject *must not* contain newlines
