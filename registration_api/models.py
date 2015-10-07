@@ -45,5 +45,6 @@ class RegistrationProfile(models.Model):
 
         expiration_date = datetime.timedelta(
             days=utils.get_settings('REGISTRATION_API_ACCOUNT_ACTIVATION_DAYS'))
+        date_joined=datetime.datetime(*(self.user.date_joined.timetuple()[:6])).replace(tzinfo=datetime_now().tzinfo)
         return self.activation_key == self.ACTIVATED or \
-               (self.user.date_joined + expiration_date <= datetime_now())
+               (date_joined + expiration_date <= datetime_now())

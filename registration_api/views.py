@@ -16,7 +16,7 @@ VALID_USER_FIELDS = utils.get_valid_user_fields()
 @api_view(['POST'])
 @permission_classes((AllowAny, ))
 def register(request):
-    if request.META.get("CONTENT_TYPE") == "application/json":
+    if  "application/json" in request.META.get("CONTENT_TYPE"):
         data = json.loads(request.body)
     else:
         data = request.POST

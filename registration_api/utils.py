@@ -4,7 +4,6 @@ import re
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.sites.models import get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
 from django.db import transaction
@@ -62,7 +61,7 @@ def create_inactive_user(request, **kwargs):
     new_user.is_active = False
     new_user.save()
     create_profile(new_user)
-    site = get_current_site(request)
+    site = request.scheme+"://"+request.get_host()
     send_activation_email(new_user, site)
     return new_user
 
